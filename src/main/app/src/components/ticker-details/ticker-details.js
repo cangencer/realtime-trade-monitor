@@ -28,7 +28,7 @@ class TickerDetails extends Component {
 
     handleData(data) {
         let result = JSON.parse(data);
-        this.setState({count: result.count, ticker: result.data});
+        this.setState({count: result.count, ticker: this.state.ticker.concat(result.data)});
     }
 
     render() {
