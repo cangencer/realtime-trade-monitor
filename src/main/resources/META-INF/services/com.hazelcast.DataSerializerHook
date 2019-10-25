@@ -30,4 +30,4 @@
 # limitations under the License.
 #
 
-com.hazelcast.jet.examples.monitor.model.TradeSerializerHook
+model.TradeSerializerHook

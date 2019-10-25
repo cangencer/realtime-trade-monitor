@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.jet.examples.monitor.model;
+package model;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -22,6 +22,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * We use java.io.{@link Serializable} here for the sake of simplicity.
@@ -29,6 +30,7 @@ import java.io.Serializable;
  */
 public class Trade implements IdentifiedDataSerializable {
 
+    private String id;
     private long time;
     private String symbol;
     private int quantity;
@@ -37,7 +39,8 @@ public class Trade implements IdentifiedDataSerializable {
     Trade() {
     }
 
-    public Trade(long time, String symbol, int quantity, int price) {
+    public Trade(String id, long time, String symbol, int quantity, int price) {
+        this.id = id;
         this.time = time;
         this.symbol = symbol;
         this.quantity = quantity;
@@ -46,10 +49,11 @@ public class Trade implements IdentifiedDataSerializable {
 
     public Trade(String line) {
         String[] args = line.split(" ");
-        this.time = Long.parseLong(args[0]);
-        this.symbol = args[1];
-        this.quantity = Integer.parseInt(args[2]);
-        this.price = Integer.parseInt(args[3]);
+        this.id = args[0];
+        this.time = Long.parseLong(args[1]);
+        this.symbol = args[2];
+        this.quantity = Integer.parseInt(args[3]);
+        this.price = Integer.parseInt(args[4]);
     }
 
     /**
@@ -79,12 +83,16 @@ public class Trade implements IdentifiedDataSerializable {
 
     @Override
     public String toString() {
-        return String.format("%d %s %d %d", time, symbol, quantity, price);
+        return String.format("%s %d %s %d %d", id, time, symbol, quantity, price);
     }
 
     @Override
     public int getFactoryId() {
         return TradeSerializerHook.FACTORY_ID;
+    }
+
+    public String getTradeId() {
+        return id;
     }
 
     @Override
@@ -93,7 +101,29 @@ public class Trade implements IdentifiedDataSerializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Trade trade = (Trade) o;
+        return time == trade.time &&
+                quantity == trade.quantity &&
+                price == trade.price &&
+                Objects.equals(id, trade.id) &&
+                Objects.equals(symbol, trade.symbol);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, time, symbol, quantity, price);
+    }
+
+    @Override
     public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeUTF(id);
         out.writeLong(time);
         out.writeUTF(symbol);
         out.writeInt(quantity);
@@ -102,6 +132,7 @@ public class Trade implements IdentifiedDataSerializable {
 
     @Override
     public void readData(ObjectDataInput in) throws IOException {
+        id = in.readUTF();
         time = in.readLong();
         symbol = in.readUTF();
         quantity = in.readInt();

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.jet.examples.monitor.model;
+package model;
 
 import com.hazelcast.internal.serialization.DataSerializerHook;
 import com.hazelcast.nio.serialization.DataSerializableFactory;

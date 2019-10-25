@@ -1,14 +1,8 @@
-package com.hazelcast.jet.examples.monitor;
-
-import com.hazelcast.aggregation.Aggregators;
-import com.hazelcast.core.EntryEvent;
-import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
-import com.hazelcast.core.MultiMap;
 import com.hazelcast.jet.IMapJet;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.examples.monitor.model.Trade;
+import model.Trade;
+import com.hazelcast.query.impl.predicates.EqualPredicate;
 
 import java.util.Collection;
 import java.util.List;
@@ -21,7 +15,10 @@ public class App {
 
         while (true) {
             IMapJet<String, Long> results = jet.getMap("query1_Results");
-            IMapJet<String, List<Trade>> drillDown = jet.getMap("query1_DrillDown");
+            IMapJet<String, Trade> trades = jet.getMap("trades");
+            IMapJet<String, List<String>> drillDown = jet.getMap("query1_Trades");
+
+            drillDown.get("AAPL").stream().limit(5).forEach(e -> System.out.println(e));
 //            MultiMap<String, Trade> drillDown = jet.getHazelcastInstance().getMultiMap("query1_DrillDown");
 
 
@@ -60,26 +57,36 @@ public class App {
             long count = 0;
             long start = 0;
             while (true) {
-                System.out.println("AAPL " + results.get("AAPL"));
-                System.out.println("First 5 AAPL Trades:");
-                Collection<Trade> trades = drillDown.get("AAPL");
-                if (trades != null) {
-                    trades.stream().limit(5).forEach(t -> {
-                        System.out.println(t);
-                    });
-                }
+
+//                queryUsingIndex(trades);
+
                 long prevCount = count;
-                count = results.aggregate(Aggregators.longSum());
+//                count = results.aggregate(Aggregators.longSum());
+                count = trades.size();
                 long end = System.nanoTime();
-                System.out.printf("Total trades so far: %,d%n", count);
+                System.out.printf("Total trades ingested so far: %,d%n", count);
                 if (start > 0) {
                     long elapsed = TimeUnit.NANOSECONDS.toSeconds(end - start);
                     long recordCount = count - prevCount;
-                    System.out.printf("Processed " + recordCount/(double)elapsed + " recs/s");
+                    System.out.println("Processed " + recordCount/(double)elapsed + " recs/s");
                 }
                 start = end;
                 Thread.sleep(5000);
             }
+        }
+    }
+
+    private static void queryUsingIndex(IMapJet<String, Trade> trades) {
+        long begin = System.nanoTime();
+        Collection<Trade> matches = trades.values(new EqualPredicate("symbol", "AAPL"));
+        long elapsed = System.nanoTime() - begin;
+        System.out.println("Query took " + TimeUnit.NANOSECONDS.toMillis(elapsed) + "ms");
+        printTrades(matches);
+    }
+
+    private static void printTrades(Collection<Trade> trades) {
+        if (trades != null) {
+            trades.stream().limit(5).forEach(System.out::println);
         }
     }
 }

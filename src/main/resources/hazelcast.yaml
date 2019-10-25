@@ -1,5 +1,5 @@
 hazelcast:
-  license-key: CUSTOM_LICENSE#40Nodes#BD09lA1SUOGiH5PwK8uZmN2QjJqdkTbEWMYCn6fXgy11111010050109111141090110091012901000000203
+#  license-key:
   group:
     name: jet
   properties:
@@ -17,8 +17,8 @@ hazelcast:
         enabled: true
         member-list:
           - 127.0.0.1
-          - 10.0.0.93:5701
-          - 10.0.0.250:5701
+#          - 10.0.0.93:5701
+#          - 10.0.0.250:5701
   native-memory:
     enabled: true
     allocator-type: POOLED
@@ -26,5 +26,9 @@ hazelcast:
       unit: MEGABYTES
       value: 2048
   map:
-    query1_DrillDown:
+#    trades:
+#      indexes:
+#        symbol:
+#          ordered: false
+    query1_Trades:
       in-memory-format: OBJECT
