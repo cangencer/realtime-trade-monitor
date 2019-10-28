@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toList;
 public class TradeProducer {
 
     private static final int MAX_BATCH_SIZE = 16*1024;
-    private static final int QUANTITY = 1_000;
+    private static final int QUANTITY = 10_000;
     private static final String TOPIC = "trades";
 
     private final int rate;

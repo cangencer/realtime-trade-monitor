@@ -18,7 +18,10 @@ public class App {
             IMapJet<String, Trade> trades = jet.getMap("trades");
             IMapJet<String, List<String>> drillDown = jet.getMap("query1_Trades");
 
-            drillDown.get("AAPL").stream().limit(5).forEach(e -> System.out.println(e));
+            List<String> rows = drillDown.get("AAPL");
+            if (rows != null) {
+                rows.stream().limit(5).forEach(e -> System.out.println(e));
+            }
 //            MultiMap<String, Trade> drillDown = jet.getHazelcastInstance().getMultiMap("query1_DrillDown");
 
 

@@ -26,7 +26,8 @@ hazelcast:
       unit: MEGABYTES
       value: 2048
   map:
-#    trades:
+    trades:
+      in-memory-format: BINARY
 #      indexes:
 #        symbol:
 #          ordered: false

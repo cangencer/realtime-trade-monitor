@@ -31,7 +31,6 @@ public class WebServer {
 
 
     public static void main(String[] args) {
-
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         IMapJet<String, Long> results = jet.getMap("query1_Results");
@@ -51,7 +50,9 @@ public class WebServer {
 
             @Override
             public void entryUpdated(EntryEvent<String, List<String>> event) {
-                event.getValue().removeAll(event.getOldValue());
+                if (event.getOldValue() != null) {
+                    event.getValue().removeAll(event.getOldValue());
+                }
                 broadcast(event);
             }
 
