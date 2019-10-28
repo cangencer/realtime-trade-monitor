@@ -30,7 +30,7 @@ public class IngestTrades {
                     .setProcessingGuarantee(ProcessingGuarantee.EXACTLY_ONCE)
                     .setName("ingestTrades");
 
-            jet.newJobIfAbsent(ingestTrades(servers), ingestTradesConfig).join();
+            jet.newJobIfAbsent(ingestTrades(servers), ingestTradesConfig);
         } finally {
             Jet.shutdownAll();
         }

@@ -4,6 +4,8 @@ import com.hazelcast.core.MapEvent;
 import com.hazelcast.jet.IMapJet;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
+import com.hazelcast.map.listener.EntryAddedListener;
+import com.hazelcast.map.listener.EntryUpdatedListener;
 import io.javalin.Javalin;
 import io.javalin.websocket.WsContext;
 import model.Trade;
@@ -37,68 +39,7 @@ public class WebServer {
         IMapJet<String, Trade> trades = jet.getMap("trades");
         IMapJet<String, List<String>> drillDown = jet.getMap("query1_Trades");
 
-        drillDown.addEntryListener(new EntryListener<String, List<String>>() {
-            @Override
-            public void mapEvicted(MapEvent event) {
-
-            }
-
-            @Override
-            public void mapCleared(MapEvent event) {
-
-            }
-
-            @Override
-            public void entryUpdated(EntryEvent<String, List<String>> event) {
-                if (event.getOldValue() != null) {
-                    event.getValue().removeAll(event.getOldValue());
-                }
-                broadcast(event);
-            }
-
-            @Override
-            public void entryRemoved(EntryEvent<String, List<String>> event) {
-
-            }
-
-            @Override
-            public void entryEvicted(EntryEvent<String, List<String>> event) {
-
-            }
-
-            @Override
-            public void entryAdded(EntryEvent<String, List<String>> event) {
-                broadcast(event);
-            }
-
-            private void broadcast(EntryEvent<String, List<String>> event) {
-                Runnable runnable = () -> {
-                    String ticker = event.getKey();
-                    List<WsContext> contexts = tickersToBeUpdated.get(ticker);
-                    if (contexts != null) {
-                        System.out.println("Broadcasting update on = " + event.getKey());
-                        for (WsContext context : contexts) {
-                            JSONObject jsonObject = new JSONObject();
-                            System.out.println("event = " + event.getValue().size());
-                            event.getValue().forEach(record -> {
-                                Long value = results.get(ticker);
-                                jsonObject.put("ticker", ticker);
-                                jsonObject.put("count", value);
-                                Trade trade = trades.get(record);
-                                jsonObject.append("data", new JSONObject()
-                                        .put("id", trade.getId())
-                                        .put("time", trade.getTime())
-                                        .put("symbol", trade.getSymbol())
-                                        .put("quantity", trade.getQuantity())
-                                        .put("price", trade.getPrice()));
-                            });
-                            context.send(jsonObject.toString());
-                        }
-                    }
-                };
-                executorService.submit(runnable);
-            }
-        }, true);
+        drillDown.addEntryListener(new TradeRecordsListener(results, trades, executorService), true);
 
 
         Javalin app = Javalin.create().start(9999);
@@ -167,4 +108,57 @@ public class WebServer {
         });
     }
 
+    private static class TradeRecordsListener
+            implements EntryUpdatedListener<String, List<String>>, EntryAddedListener<String, List<String>> {
+        private final IMapJet<String, Long> results;
+        private final IMapJet<String, Trade> trades;
+        private final ExecutorService executorService;
+
+        TradeRecordsListener(IMapJet<String, Long> results, IMapJet<String, Trade> trades, ExecutorService executorService) {
+            this.results = results;
+            this.trades = trades;
+            this.executorService = executorService;
+        }
+
+        @Override
+        public void entryUpdated(EntryEvent<String, List<String>> event) {
+            if (event.getOldValue() != null) {
+                event.getValue().removeAll(event.getOldValue());
+            }
+            broadcast(event);
+        }
+
+        @Override
+        public void entryAdded(EntryEvent<String, List<String>> event) {
+            broadcast(event);
+        }
+
+        private void broadcast(EntryEvent<String, List<String>> event) {
+            Runnable runnable = () -> {
+                String ticker = event.getKey();
+                List<WsContext> contexts = tickersToBeUpdated.get(ticker);
+                if (contexts != null) {
+                    System.out.println("Broadcasting update on = " + event.getKey());
+                    for (WsContext context : contexts) {
+                        JSONObject jsonObject = new JSONObject();
+                        System.out.println("event = " + event.getValue().size());
+                        event.getValue().forEach(record -> {
+                            Long value = results.get(ticker);
+                            jsonObject.put("ticker", ticker);
+                            jsonObject.put("count", value);
+                            Trade trade = trades.get(record);
+                            jsonObject.append("data", new JSONObject()
+                                    .put("id", trade.getId())
+                                    .put("time", trade.getTime())
+                                    .put("symbol", trade.getSymbol())
+                                    .put("quantity", trade.getQuantity())
+                                    .put("price", trade.getPrice()));
+                        });
+                        context.send(jsonObject.toString());
+                    }
+                }
+            };
+            executorService.submit(runnable);
+        }
+    }
 }
