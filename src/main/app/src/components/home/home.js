@@ -25,7 +25,7 @@ class Home extends Component {
     }
 
     onOpen() {
-        this.sendMessage('LOAD_TICKERS')
+        setInterval(() => this.sendMessage('LOAD_TICKERS'), 1000);
     }
 
     handleData(data) {
@@ -44,6 +44,18 @@ class Home extends Component {
                     {
                         Header: 'Ticker Name',
                         accessor: 'ticker'
+                    },
+                    {
+                        Header: 'Trade Count',
+                        accessor: 'count'
+                    },
+                    {
+                        Header: 'Trade Sum',
+                        accessor: 'sum'
+                    },
+                    {
+                        Header: 'Trade Average Price',
+                        accessor: 'avg'
                     }
                 ]
             }

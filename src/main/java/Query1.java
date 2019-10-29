@@ -1,8 +1,8 @@
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.aggregate.AggregateOperations;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
+import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.jet.kafka.KafkaSources;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
@@ -16,6 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+
+import static com.hazelcast.jet.aggregate.AggregateOperations.allOf;
+import static com.hazelcast.jet.aggregate.AggregateOperations.averagingLong;
+import static com.hazelcast.jet.aggregate.AggregateOperations.counting;
+import static com.hazelcast.jet.aggregate.AggregateOperations.summingLong;
 
 public class Query1 {
 
@@ -51,10 +56,10 @@ public class Query1 {
                  .withoutTimestamps();
 
 
-        StreamStage<Entry<String, Long>> aggregated =
+        StreamStage<Entry<String, Tuple3<Long, Long, Double>>> aggregated =
                 source
                         .groupingKey(Trade::getSymbol)
-                        .rollingAggregate(AggregateOperations.counting())
+                        .rollingAggregate(allOf(counting(), summingLong(Trade::getPrice), averagingLong(Trade::getPrice)))
                         .setName("sum by symbol");
 
         // write results to IMDG IMap

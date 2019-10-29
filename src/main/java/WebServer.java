@@ -1,9 +1,8 @@
 import com.hazelcast.core.EntryEvent;
-import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
 import com.hazelcast.jet.IMapJet;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
+import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
 import io.javalin.Javalin;
@@ -19,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * date: 2019-10-25
@@ -29,13 +29,12 @@ public class WebServer {
     private static Map<String, WsContext> sessions = new ConcurrentHashMap<>();
     private static Map<String, List<WsContext>> tickersToBeUpdated = new ConcurrentHashMap<>();
     private static JetInstance jet = Jet.newJetClient();
-    private static Runnable broadcastRunnable;
 
 
     public static void main(String[] args) {
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-        IMapJet<String, Long> results = jet.getMap("query1_Results");
+        IMapJet<String, Tuple3<Long, Long, Double>> results = jet.getMap("query1_Results");
         IMapJet<String, Trade> trades = jet.getMap("trades");
         IMapJet<String, List<String>> drillDown = jet.getMap("query1_Trades");
 
@@ -74,7 +73,14 @@ public class WebServer {
                     JSONObject jsonObject = new JSONObject();
                     Set<String> tickers = drillDown.keySet();
                     for (String ticker : tickers) {
-                        jsonObject.append("tickers", new JSONObject().put("ticker", ticker));
+
+                        Tuple3<Long, Long, Double> value = results.get(ticker);
+                        jsonObject.append("tickers", new JSONObject()
+                                .put("ticker", ticker)
+                                .put("count", value.f0())
+                                .put("sum", value.f1())
+                                .put("avg", value.f2())
+                        );
                     }
                     session.send(jsonObject.toString());
 
@@ -88,12 +94,12 @@ public class WebServer {
                         v.add(session);
                         return v;
                     });
-                    
+
                     JSONObject jsonObject = new JSONObject();
                     drillDown.get(ticker).forEach(record -> {
-                        Long value = results.get(ticker);
+                        Tuple3<Long, Long, Double> value = results.get(ticker);
                         jsonObject.put("ticker", ticker);
-                        jsonObject.put("count", value);
+                        jsonObject.put("count", value.f0());
                         Trade trade = trades.get(record);
                         jsonObject.append("data", new JSONObject()
                                 .put("id", trade.getId())
@@ -110,11 +116,11 @@ public class WebServer {
 
     private static class TradeRecordsListener
             implements EntryUpdatedListener<String, List<String>>, EntryAddedListener<String, List<String>> {
-        private final IMapJet<String, Long> results;
+        private final IMapJet<String, Tuple3<Long, Long, Double>> results;
         private final IMapJet<String, Trade> trades;
         private final ExecutorService executorService;
 
-        TradeRecordsListener(IMapJet<String, Long> results, IMapJet<String, Trade> trades, ExecutorService executorService) {
+        TradeRecordsListener(IMapJet<String, Tuple3<Long, Long, Double>> results, IMapJet<String, Trade> trades, ExecutorService executorService) {
             this.results = results;
             this.trades = trades;
             this.executorService = executorService;
@@ -137,15 +143,15 @@ public class WebServer {
             Runnable runnable = () -> {
                 String ticker = event.getKey();
                 List<WsContext> contexts = tickersToBeUpdated.get(ticker);
-                if (contexts != null) {
+                if (contexts != null && !contexts.isEmpty()) {
                     System.out.println("Broadcasting update on = " + event.getKey());
                     for (WsContext context : contexts) {
                         JSONObject jsonObject = new JSONObject();
                         System.out.println("event = " + event.getValue().size());
                         event.getValue().forEach(record -> {
-                            Long value = results.get(ticker);
+                            Tuple3<Long, Long, Double> value = results.get(ticker);
                             jsonObject.put("ticker", ticker);
-                            jsonObject.put("count", value);
+                            jsonObject.put("count", value.f0());
                             Trade trade = trades.get(record);
                             jsonObject.append("data", new JSONObject()
                                     .put("id", trade.getId())
