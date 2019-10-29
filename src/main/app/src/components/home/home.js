@@ -29,8 +29,16 @@ class Home extends Component {
     }
 
     handleData(data) {
-        console.log(data);
         let result = JSON.parse(data);
+        for (let i = 0; i < result.symbols.length; i++) {
+            let oldPrice;
+            if (typeof this.state.symbols[i] === 'undefined') {
+                oldPrice = 0;
+            } else {
+                oldPrice = this.state.symbols[i].price;
+            }
+            result.symbols[i]["oldPrice"] = oldPrice;
+        }
         this.setState({symbols: result.symbols});
     }
 
@@ -38,9 +46,6 @@ class Home extends Component {
         const {symbols} = this.state;
 
         const columns = [
-            {
-                Header: 'Symbols',
-                columns: [
                     {
                         Header: 'Symbol',
                         accessor: 'symbol'
@@ -51,15 +56,28 @@ class Home extends Component {
                     },
                     {
                         Header: 'Price',
-                        accessor: 'price'
+                        accessor: 'price',
+                        Cell: ({value}) => (value/100).toLocaleString("en-US", {style:"currency", currency:"USD"}),
+                        getProps: (state, ri, column) => {
+                            if (!ri){
+                                return {};
+                            }
+                            console.log(ri.row);
+                            const changeUp = ri.row.price > ri.row._original.oldPrice;
+                            const changeDown = ri.row.price < ri.row._original.oldPrice;
+                            const style = {
+                                backgroundColor: changeUp ? 'green' : (changeDown ? 'red' : 'inherit'),
+                                color: changeUp || changeDown ? 'white' : 'inherit',
+                            }
+                            return {
+                                style : style
+                            };
+                        }
                     },
                     {
                         Header: 'Volume',
                         accessor: 'volume'
                     },
-
-                ]
-            }
         ];
         return <Page header="Trade Monitor Dashboard">
             <ReactTable
@@ -69,7 +87,8 @@ class Home extends Component {
                 expanded={this.state.expanded}
                 onExpandedChange={expanded => this.setState({expanded})}
                 className="-striped -highlight"
-                SubComponent={original => <SymbolDetails symbol={original.row.symbol}/>}
+                SubComponent={original => <SymbolDetails
+                    symbol={original.row.symbol}/>}
             />
 
             <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
