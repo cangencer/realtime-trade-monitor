@@ -9,7 +9,6 @@ class SymbolDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            count: 0,
             symbol: []
         };
 
@@ -28,8 +27,7 @@ class SymbolDetails extends Component {
 
     handleData(data) {
         let result = JSON.parse(data);
-        // this.setState({count: result.count, symbol: this.state.symbol.concat(result.data)});
-        this.setState({count: result.count, symbol: result.data});
+        this.setState({symbol: this.state.symbol.concat(result.data)});
     }
 
     render() {
@@ -64,7 +62,7 @@ class SymbolDetails extends Component {
         ];
 
         return <Fragment>
-            <span>{this.props.symbol} has {this.state.count} records</span>
+            <span>{this.props.symbol} has {this.state.symbol.length} records</span>
             <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
                        onMessage={this.handleData}
                        reconnect={true} debug={true}

@@ -71,7 +71,7 @@ public class WebServer {
                             .put("symbol", key)
                             .put("count", value.f0())
                             .put("volume", priceToString(value.f1()))
-                            .put("price", priceToString(value.f2()))
+                            .put("price", value.f2())
                     ));
                     session.send(jsonObject.toString());
                 } else if (message.startsWith("DRILL_SYMBOL")) {
