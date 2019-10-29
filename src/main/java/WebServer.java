@@ -37,7 +37,6 @@ public class WebServer {
         Javalin app = Javalin.create().start(9000);
         app.config
                 .addStaticFiles("/app")                                     // The ReactJS application
-                .addStaticFiles("/")                                        // Other static assets, external to the ReactJS application
                 .addSinglePageRoot("/", "/app/index.html");   // Catch-all route for the single-page application
 
         app.ws("/trades", wsHandler -> {

@@ -55,7 +55,7 @@
                         <index>true</index>
                         <compress>true</compress>
                         <manifest>
-                            <mainClass>Server</mainClass>
+                            <mainClass>WebServer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
