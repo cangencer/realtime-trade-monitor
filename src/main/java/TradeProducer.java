@@ -24,9 +24,9 @@ public class TradeProducer {
     private static final String TOPIC = "trades";
 
     private final int rate;
-    private final Map<String, Integer> tickerToPrice;
+    private final Map<String, Integer> symbolToPrice;
     private final KafkaProducer<String, String> producer;
-    private final List<String> tickers;
+    private final List<String> symbols;
 
     private long emitSchedule;
 
@@ -42,13 +42,13 @@ public class TradeProducer {
         props.setProperty("key.serializer", StringSerializer.class.getName());
         props.setProperty("value.serializer", StringSerializer.class.getName());
 
-        new TradeProducer(props, rate, loadTickers()).run();
+        new TradeProducer(props, rate, loadSymbols()).run();
     }
 
-    private TradeProducer(Properties props, int rate, List<String> tickers) {
+    private TradeProducer(Properties props, int rate, List<String> symbols) {
         this.rate = rate;
-        this.tickers = tickers;
-        this.tickerToPrice  = tickers.stream().collect(Collectors.toMap(t -> t, t -> 2500));
+        this.symbols = symbols;
+        this.symbolToPrice = symbols.stream().collect(Collectors.toMap(t -> t, t -> 2500));
         this.producer = new KafkaProducer<>(props);
         this.emitSchedule = System.nanoTime();
     }
@@ -62,12 +62,12 @@ public class TradeProducer {
                 if (System.nanoTime() < emitSchedule) {
                     break;
                 }
-                String ticker = tickers.get(rnd.nextInt(tickers.size()));
-                int price = tickerToPrice.compute(ticker, (t, v) -> v + rnd.nextInt(-1, 2));
+                String symbol = symbols.get(rnd.nextInt(symbols.size()));
+                int price = symbolToPrice.compute(symbol, (t, v) -> v + rnd.nextInt(-1, 2));
                 Trade trade = new Trade(
                         UUID.randomUUID().toString(),
                         System.currentTimeMillis(),
-                        ticker,
+                        symbol,
                         rnd.nextInt(10, QUANTITY),
                         price
                 );
@@ -78,7 +78,7 @@ public class TradeProducer {
         }
     }
 
-    private static List<String> loadTickers() {
+    private static List<String> loadSymbols() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 TradeProducer.class.getResourceAsStream("/nasdaqlisted.txt"), UTF_8))
         ) {

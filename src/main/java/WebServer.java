@@ -3,22 +3,20 @@ import com.hazelcast.jet.IMapJet;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.jet.datamodel.Tuple3;
+import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.map.listener.EntryAddedListener;
-import com.hazelcast.map.listener.EntryUpdatedListener;
+import com.hazelcast.query.impl.predicates.EqualPredicate;
 import io.javalin.Javalin;
 import io.javalin.websocket.WsContext;
 import model.Trade;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * date: 2019-10-25
@@ -27,21 +25,18 @@ import java.util.concurrent.ScheduledExecutorService;
 public class WebServer {
 
     private static Map<String, WsContext> sessions = new ConcurrentHashMap<>();
-    private static Map<String, List<WsContext>> tickersToBeUpdated = new ConcurrentHashMap<>();
+    private static Map<String, List<WsContext>> symbolsToBeUpdated = new ConcurrentHashMap<>();
     private static JetInstance jet = Jet.newJetClient();
 
 
     public static void main(String[] args) {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-
-        IMapJet<String, Tuple3<Long, Long, Double>> results = jet.getMap("query1_Results");
+        IMapJet<String, Tuple3<Long, Long, Integer>> results = jet.getMap("query1_Results");
         IMapJet<String, Trade> trades = jet.getMap("trades");
-        IMapJet<String, List<String>> drillDown = jet.getMap("query1_Trades");
+        IMapJet<String, String> symbols = jet.getMap("symbols");
 
-        drillDown.addEntryListener(new TradeRecordsListener(results, trades, executorService), true);
+        trades.addEntryListener(new TradeRecordsListener(), true);
 
-
-        Javalin app = Javalin.create().start(9999);
+        Javalin app = Javalin.create().start(9000);
         app.config
                 .addStaticFiles("/app")                                     // The ReactJS application
                 .addStaticFiles("/")                                        // Other static assets, external to the ReactJS application
@@ -58,7 +53,7 @@ public class WebServer {
                 String sessionId = ctx.getSessionId();
                 System.out.println("Closing the session -> " + sessionId);
                 sessions.remove(sessionId, ctx);
-                for (Entry<String, List<WsContext>> entry : tickersToBeUpdated.entrySet()) {
+                for (Entry<String, List<WsContext>> entry : symbolsToBeUpdated.entrySet()) {
                     List<WsContext> contexts = entry.getValue();
                     contexts.removeIf(context -> context.getSessionId().equals(sessionId));
                 }
@@ -69,25 +64,20 @@ public class WebServer {
                 String message = ctx.message();
                 WsContext session = sessions.get(sessionId);
 
-                if ("LOAD_TICKERS".equals(message)) {
+                if ("LOAD_SYMBOLS".equals(message)) {
                     JSONObject jsonObject = new JSONObject();
-                    Set<String> tickers = drillDown.keySet();
-                    for (String ticker : tickers) {
-
-                        Tuple3<Long, Long, Double> value = results.get(ticker);
-                        jsonObject.append("tickers", new JSONObject()
-                                .put("ticker", ticker)
-                                .put("count", value.f0())
-                                .put("sum", value.f1())
-                                .put("avg", value.f2())
-                        );
-                    }
+                    results.forEach((key, value) -> jsonObject.append("symbols", new JSONObject()
+                            .put("name", symbols.get(key))
+                            .put("symbol", key)
+                            .put("count", value.f0())
+                            .put("volume", priceToString(value.f1()))
+                            .put("price", priceToString(value.f2()))
+                    ));
                     session.send(jsonObject.toString());
-
-                } else if (message.startsWith("DRILL_TICKER")) {
-                    String ticker = message.split(" ")[1];
-                    System.out.println("Session -> " + sessionId + " requested ticker -> " + ticker);
-                    tickersToBeUpdated.compute(ticker, (k, v) -> {
+                } else if (message.startsWith("DRILL_SYMBOL")) {
+                    String symbol = message.split(" ")[1];
+                    System.out.println("Session -> " + sessionId + " requested symbol -> " + symbol);
+                    symbolsToBeUpdated.compute(symbol, (k, v) -> {
                         if (v == null) {
                             v = new ArrayList<>();
                         }
@@ -96,17 +86,10 @@ public class WebServer {
                     });
 
                     JSONObject jsonObject = new JSONObject();
-                    drillDown.get(ticker).forEach(record -> {
-                        Tuple3<Long, Long, Double> value = results.get(ticker);
-                        jsonObject.put("ticker", ticker);
-                        jsonObject.put("count", value.f0());
-                        Trade trade = trades.get(record);
-                        jsonObject.append("data", new JSONObject()
-                                .put("id", trade.getId())
-                                .put("time", trade.getTime())
-                                .put("symbol", trade.getSymbol())
-                                .put("quantity", trade.getQuantity())
-                                .put("price", trade.getPrice()));
+                    Collection<Trade> records = trades.values(new EqualPredicate("symbol", symbol));
+                    records.forEach(trade -> {
+                        jsonObject.put("symbol", symbol);
+                        jsonObject.append("data", tradeToJson(trade));
                     });
                     session.send(jsonObject.toString());
                 }
@@ -114,57 +97,35 @@ public class WebServer {
         });
     }
 
-    private static class TradeRecordsListener
-            implements EntryUpdatedListener<String, List<String>>, EntryAddedListener<String, List<String>> {
-        private final IMapJet<String, Tuple3<Long, Long, Double>> results;
-        private final IMapJet<String, Trade> trades;
-        private final ExecutorService executorService;
-
-        TradeRecordsListener(IMapJet<String, Tuple3<Long, Long, Double>> results, IMapJet<String, Trade> trades, ExecutorService executorService) {
-            this.results = results;
-            this.trades = trades;
-            this.executorService = executorService;
-        }
+    private static class TradeRecordsListener implements EntryAddedListener<String, Trade> {
 
         @Override
-        public void entryUpdated(EntryEvent<String, List<String>> event) {
-            if (event.getOldValue() != null) {
-                event.getValue().removeAll(event.getOldValue());
-            }
-            broadcast(event);
-        }
-
-        @Override
-        public void entryAdded(EntryEvent<String, List<String>> event) {
-            broadcast(event);
-        }
-
-        private void broadcast(EntryEvent<String, List<String>> event) {
-            Runnable runnable = () -> {
-                String ticker = event.getKey();
-                List<WsContext> contexts = tickersToBeUpdated.get(ticker);
-                if (contexts != null && !contexts.isEmpty()) {
-                    System.out.println("Broadcasting update on = " + event.getKey());
-                    for (WsContext context : contexts) {
-                        JSONObject jsonObject = new JSONObject();
-                        System.out.println("event = " + event.getValue().size());
-                        event.getValue().forEach(record -> {
-                            Tuple3<Long, Long, Double> value = results.get(ticker);
-                            jsonObject.put("ticker", ticker);
-                            jsonObject.put("count", value.f0());
-                            Trade trade = trades.get(record);
-                            jsonObject.append("data", new JSONObject()
-                                    .put("id", trade.getId())
-                                    .put("time", trade.getTime())
-                                    .put("symbol", trade.getSymbol())
-                                    .put("quantity", trade.getQuantity())
-                                    .put("price", trade.getPrice()));
-                        });
-                        context.send(jsonObject.toString());
-                    }
+        public void entryAdded(EntryEvent<String, Trade> event) {
+            String symbol = event.getValue().getSymbol();
+            List<WsContext> contexts = symbolsToBeUpdated.get(symbol);
+            if (contexts != null && !contexts.isEmpty()) {
+                System.out.println("Broadcasting update on = " + symbol);
+                for (WsContext context : contexts) {
+                    Trade trade = event.getValue();
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("symbol", symbol);
+                    jsonObject.append("data", tradeToJson(trade));
+                    context.send(jsonObject.toString());
                 }
-            };
-            executorService.submit(runnable);
+            }
         }
+    }
+
+    private static JSONObject tradeToJson(Trade trade) {
+        return new JSONObject()
+                .put("id", trade.getTradeId())
+                .put("time", Util.toLocalTime(trade.getTime()))
+                .put("symbol", trade.getSymbol())
+                .put("quantity", String.format("%,d", trade.getQuantity()))
+                .put("price", priceToString(trade.getPrice()));
+    }
+
+    private static String priceToString(long price) {
+        return String.format("$%,.2f", price / 100.0d);
     }
 }
