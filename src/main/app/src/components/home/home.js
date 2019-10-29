@@ -4,14 +4,14 @@ import Page from '../Page'
 import Websocket from 'react-websocket';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
-import TickerDetails from '../ticker-details';
+import SymbolDetails from '../symbol-details';
 
 class Home extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            tickers: [],
+            symbols: [],
             expanded: {}
         };
 
@@ -25,53 +25,54 @@ class Home extends Component {
     }
 
     onOpen() {
-        setInterval(() => this.sendMessage('LOAD_TICKERS'), 1000);
+        setInterval(() => this.sendMessage('LOAD_SYMBOLS'), 1000);
     }
 
     handleData(data) {
         console.log(data);
         let result = JSON.parse(data);
-        this.setState({tickers: result.tickers});
+        this.setState({symbols: result.symbols});
     }
 
     render() {
-        const {tickers} = this.state;
+        const {symbols} = this.state;
 
         const columns = [
             {
-                Header: 'Tickers',
+                Header: 'Symbols',
                 columns: [
                     {
-                        Header: 'Ticker Name',
-                        accessor: 'ticker'
+                        Header: 'Symbol',
+                        accessor: 'symbol'
                     },
                     {
-                        Header: 'Trade Count',
-                        accessor: 'count'
+                        Header: 'Name',
+                        accessor: 'name'
                     },
                     {
-                        Header: 'Trade Sum',
-                        accessor: 'sum'
+                        Header: 'Price',
+                        accessor: 'price'
                     },
                     {
-                        Header: 'Trade Average Price',
-                        accessor: 'avg'
-                    }
+                        Header: 'Volume',
+                        accessor: 'volume'
+                    },
+
                 ]
             }
         ];
         return <Page header="Real-time Trades">
             <ReactTable
-                data={tickers}
+                data={symbols}
                 columns={columns}
-                defaultPageSize={10}
+                defaultPageSize={25}
                 expanded={this.state.expanded}
                 onExpandedChange={expanded => this.setState({expanded})}
                 className="-striped -highlight"
-                SubComponent={original => <TickerDetails ticker={original.row.ticker}/>}
+                SubComponent={original => <SymbolDetails symbol={original.row.symbol}/>}
             />
 
-            <Websocket url='ws://localhost:9999/trades' onOpen={this.onOpen}
+            <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
                        onMessage={this.handleData}
                        reconnect={true} debug={true}
                        ref={Websocket => {

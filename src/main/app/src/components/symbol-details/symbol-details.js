@@ -4,13 +4,13 @@ import Websocket from 'react-websocket';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
-class TickerDetails extends Component {
+class SymbolDetails extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
             count: 0,
-            ticker: []
+            symbol: []
         };
 
         this.sendMessage = this.sendMessage.bind(this);
@@ -23,17 +23,17 @@ class TickerDetails extends Component {
     }
 
     onOpen() {
-        this.sendMessage('DRILL_TICKER ' + this.props.ticker);
+        this.sendMessage('DRILL_SYMBOL ' + this.props.symbol);
     }
 
     handleData(data) {
         let result = JSON.parse(data);
-        // this.setState({count: result.count, ticker: this.state.ticker.concat(result.data)});
-        this.setState({count: result.count, ticker: result.data});
+        // this.setState({count: result.count, symbol: this.state.symbol.concat(result.data)});
+        this.setState({count: result.count, symbol: result.data});
     }
 
     render() {
-        const {ticker} = this.state;
+        const {symbol} = this.state;
 
         const columns = [
             {
@@ -64,15 +64,15 @@ class TickerDetails extends Component {
         ];
 
         return <Fragment>
-            <span>{this.props.ticker} has {this.state.count} records</span>
-            <Websocket url='ws://localhost:9999/trades' onOpen={this.onOpen}
+            <span>{this.props.symbol} has {this.state.count} records</span>
+            <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
                        onMessage={this.handleData}
                        reconnect={true} debug={true}
                        ref={Websocket => {
                            this.refWebSocket = Websocket;
                        }}/>
             <ReactTable
-                data={ticker}
+                data={symbol}
                 columns={columns}
                 defaultPageSize={10}
                 expanded={this.state.expanded}
@@ -83,4 +83,4 @@ class TickerDetails extends Component {
     }
 }
 
-export default TickerDetails;
+export default SymbolDetails;

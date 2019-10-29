@@ -28,8 +28,8 @@ hazelcast:
   map:
     trades:
       in-memory-format: BINARY
-#      indexes:
-#        symbol:
-#          ordered: false
-    query1_Trades:
-      in-memory-format: OBJECT
+      indexes:
+        symbol:
+          ordered: false
+    query1_Results:
+      in-memory-format: BINARY

@@ -22,49 +22,10 @@ public class App {
             if (rows != null) {
                 rows.stream().limit(5).forEach(e -> System.out.println(e));
             }
-//            MultiMap<String, Trade> drillDown = jet.getHazelcastInstance().getMultiMap("query1_DrillDown");
-
-
-//            drillDown.addEntryListener(new EntryListener<String, Trade>() {
-//                @Override
-//                public void entryEvicted(EntryEvent<String, Trade> event) {
-//
-//                }
-//
-//                @Override
-//                public void entryRemoved(EntryEvent<String, Trade> event) {
-//
-//                }
-//
-//                @Override
-//                public void entryUpdated(EntryEvent<String, Trade> event) {
-//
-//                }
-//
-//                @Override
-//                public void mapCleared(MapEvent event) {
-//
-//                }
-//
-//                @Override
-//                public void mapEvicted(MapEvent event) {
-//
-//                }
-//
-//                @Override
-//                public void entryAdded(EntryEvent<String, Trade> entryEvent) {
-////                    System.out.println("New trade for AAPL: " + entryEvent.getValue());
-//                }
-//            }, "AAPL", true);
-
             long count = 0;
             long start = 0;
             while (true) {
-
-//                queryUsingIndex(trades);
-
                 long prevCount = count;
-//                count = results.aggregate(Aggregators.longSum());
                 count = trades.size();
                 long end = System.nanoTime();
                 System.out.printf("Total trades ingested so far: %,d%n", count);

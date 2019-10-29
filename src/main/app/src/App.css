@@ -13,7 +13,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-size: calc(8px + 2vmin);
+  font-size: calc(8px + 1vmin);
   color: white;
 }
 
