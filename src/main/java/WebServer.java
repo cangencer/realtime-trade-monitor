@@ -16,12 +16,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-/**
- * date: 2019-10-25
- * author: emindemirci
- */
 public class WebServer {
 
     private static Map<String, WsContext> sessions = new ConcurrentHashMap<>();
@@ -66,13 +64,16 @@ public class WebServer {
 
                 if ("LOAD_SYMBOLS".equals(message)) {
                     JSONObject jsonObject = new JSONObject();
-                    results.forEach((key, value) -> jsonObject.append("symbols", new JSONObject()
-                            .put("name", symbols.get(key))
-                            .put("symbol", key)
-                            .put("count", value.f0())
-                            .put("volume", priceToString(value.f1()))
-                            .put("price", priceToString(value.f2()))
-                    ));
+                    Map<String, String> allSymbols = symbols.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+                    results.forEach((key, value) -> {
+                        jsonObject.append("symbols", new JSONObject()
+                                    .put("name", allSymbols.get(key))
+                                .put("symbol", key)
+                                .put("count", value.f0())
+                                .put("volume", priceToString(value.f1()))
+                                .put("price", priceToString(value.f2()))
+                        );
+                    });
                     session.send(jsonObject.toString());
                 } else if (message.startsWith("DRILL_SYMBOL")) {
                     String symbol = message.split(" ")[1];
