@@ -61,7 +61,7 @@ class Home extends Component {
                 ]
             }
         ];
-        return <Page header="Real-time Trades">
+        return <Page header="Trade Monitor Dashboard">
             <ReactTable
                 data={symbols}
                 columns={columns}
