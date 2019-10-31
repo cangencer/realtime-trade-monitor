@@ -35,48 +35,43 @@ class SymbolDetails extends Component {
 
         const columns = [
             {
-                Header: 'Records',
-                columns: [
-                    {
-                        Header: 'ID',
-                        accessor: 'id'
-                    },
-                    {
-                        Header: 'Time',
-                        accessor: 'time'
-                    },
-                    {
-                        Header: 'Symbol',
-                        accessor: 'symbol'
-                    },
-                    {
-                        Header: 'Quantity',
-                        accessor: 'quantity'
-                    },
-                    {
-                        Header: 'Price',
-                        accessor: 'price'
-                    }
-                ]
+                Header: 'ID',
+                accessor: 'id'
+            },
+            {
+                Header: 'Time',
+                accessor: 'time'
+            },
+            {
+                Header: 'Symbol',
+                accessor: 'symbol'
+            },
+            {
+                Header: 'Quantity',
+                accessor: 'quantity'
+            },
+            {
+                Header: 'Price',
+                accessor: 'price'
             }
         ];
 
         return <Fragment>
-            <span>{this.props.symbol} has {this.state.symbol.length} records</span>
-            <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
-                       onMessage={this.handleData}
-                       reconnect={true} debug={true}
-                       ref={Websocket => {
-                           this.refWebSocket = Websocket;
-                       }}/>
-            <ReactTable
-                data={symbol}
-                columns={columns}
-                defaultPageSize={10}
-                expanded={this.state.expanded}
-                onExpandedChange={expanded => this.setState({expanded})}
-                className="-striped -highlight"
-            />
+        <span>{this.props.symbol} has {this.state.symbol.length} records</span>
+        <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
+        onMessage={this.handleData}
+        reconnect={true} debug={true}
+        ref={Websocket => {
+            this.refWebSocket = Websocket;
+        }}/>
+        <ReactTable
+        data={symbol}
+        columns={columns}
+        defaultPageSize={10}
+        expanded={this.state.expanded}
+        onExpandedChange={expanded => this.setState({expanded})}
+        className="Table-subtable"
+        />
         </Fragment>
     }
 }

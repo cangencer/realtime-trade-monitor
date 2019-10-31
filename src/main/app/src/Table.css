@@ -1,0 +1,80 @@
+.rt-th {
+  height: 3.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-deep-blue);
+  border-bottom: 1px solid rgba(216, 216, 216, 0.2);
+  color: var(--color-mid-blue);
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.Table-main .rt-tbody .rt-tr {
+  background-color: var(--color-midnight-blue);
+  position: relative;
+  border-bottom: 1px solid #24283F;
+  cursor: pointer;
+}
+
+.rt-tbody .rt-tr:hover {
+  background-color: var(--color-deep-blue);
+}
+
+.rt-td {
+  height: 3.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.rt-tbody .rt-tr.Table-expanded {
+  background-color: #010a3f;
+}
+
+.Table-highlightValue {
+  color: white;
+  font-weight: 700;
+}
+
+.Table-price:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.Table-changeUp {
+  color: #00d51d;
+  z-index: 0;
+}
+.Table-changeDown {
+  color: #ff0000;
+  z-index: 0;
+}
+
+.Table-changeUp:before {
+  background-color: #00ff4b;
+}
+.Table-changeDown:before {
+  background-color: #ff0000;
+}
+
+.Table-subtable .rt-tbody .rt-tr {
+  background-color: #0c112b;
+  position: relative;
+  border-bottom: 1px solid #24283F;
+  cursor: default;
+}
+
+.Table-subtable .pagination-bottom {
+  background-color: #0c112b;
+  border-bottom: 1px solid #24283F;
+  height: 3.125rem;
+  color: var(--color-mid-blue);
+}
