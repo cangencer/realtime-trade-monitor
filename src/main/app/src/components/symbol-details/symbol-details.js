@@ -10,7 +10,8 @@ class SymbolDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            symbol: []
+            symbol: [],
+            loading: true,
         };
 
         this.sendMessage = this.sendMessage.bind(this);
@@ -29,7 +30,10 @@ class SymbolDetails extends Component {
 
     handleData(data) {
         let result = JSON.parse(data);
-        this.setState({symbol: this.state.symbol.concat(result.data)});
+        this.setState(prevState => ({
+            symbol: prevState.symbol.concat(result.data),
+            loading: false,
+        }));
     }
 
     renderPagination(paginationProps) {
@@ -73,6 +77,7 @@ class SymbolDetails extends Component {
         data={symbol}
         columns={columns}
         defaultPageSize={10}
+        noDataText={this.state.loading ? 'Loading data...' : 'No rows found'}
         expanded={this.state.expanded}
         onExpandedChange={expanded => this.setState({expanded})}
         className="Table-subtable"
