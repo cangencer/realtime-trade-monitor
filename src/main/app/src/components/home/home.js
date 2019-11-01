@@ -6,6 +6,7 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import SymbolDetails from '../symbol-details';
 import '../../Table.css';
+import Pagination from '../Pagination';
 
 class Home extends Component {
 
@@ -89,6 +90,8 @@ class Home extends Component {
         defaultPageSize={25}
         expanded={this.state.expanded}
         onExpandedChange={expanded => this.setState({expanded})}
+        // PaginationComponent={ReactTablePagination}
+        PaginationComponent={Pagination}
         getTrProps={(state, rowInfo) => ({
             className: rowInfo && state.expanded[rowInfo.index] ? 'Table-expanded' : ''}
         )}

@@ -3,6 +3,7 @@ import React, {Component, Fragment} from 'react'
 import Websocket from 'react-websocket';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
+import Pagination from '../Pagination';
 
 class SymbolDetails extends Component {
 
@@ -15,6 +16,7 @@ class SymbolDetails extends Component {
         this.sendMessage = this.sendMessage.bind(this);
         this.handleData = this.handleData.bind(this);
         this.onOpen = this.onOpen.bind(this);
+        this.renderPagination = this.renderPagination.bind(this);
     }
 
     sendMessage(message) {
@@ -28,6 +30,10 @@ class SymbolDetails extends Component {
     handleData(data) {
         let result = JSON.parse(data);
         this.setState({symbol: this.state.symbol.concat(result.data)});
+    }
+
+    renderPagination(paginationProps) {
+        return <Pagination {...paginationProps} extraData={<span>{this.props.symbol} has {this.state.symbol.length} records</span>}/>
     }
 
     render() {
@@ -57,7 +63,6 @@ class SymbolDetails extends Component {
         ];
 
         return <Fragment>
-        <span>{this.props.symbol} has {this.state.symbol.length} records</span>
         <Websocket url='ws://localhost:9000/trades' onOpen={this.onOpen}
         onMessage={this.handleData}
         reconnect={true} debug={true}
@@ -71,6 +76,7 @@ class SymbolDetails extends Component {
         expanded={this.state.expanded}
         onExpandedChange={expanded => this.setState({expanded})}
         className="Table-subtable"
+        PaginationComponent={this.renderPagination}
         />
         </Fragment>
     }
