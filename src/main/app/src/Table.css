@@ -1,8 +1,21 @@
+.ReactTable .rt-noData {
+  background-color: var(--color-dark-blue);
+  color: var(--color-light-blue);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 2rem;
+}
+
+.ReactTable .rt-td,
+.ReactTable .rt-thead .rt-th, .ReactTable .rt-thead .rt-td {
+  padding: 0 2rem;
+}
+
 .rt-th {
   height: 3.125rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   background-color: var(--color-deep-blue);
   border-bottom: 1px solid rgba(216, 216, 216, 0.2);
   color: var(--color-mid-blue);
@@ -21,16 +34,26 @@
   background-color: var(--color-deep-blue);
 }
 
-.rt-td {
+.ReactTable .rt-td {
   height: 3.125rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   z-index: 1;
 }
 
 .rt-tbody .rt-tr.Table-expanded {
   background-color: #010a3f;
+}
+
+.ReactTable .rt-expander {
+  color: white;
+  margin: 0;
+  font-size: 0;
+}
+
+.ReactTable .rt-expander:after {
+  border-top-color: var(--color-mid-blue);
 }
 
 .Table-highlightValue {
