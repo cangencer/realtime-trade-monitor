@@ -19,7 +19,6 @@ class Home extends Component {
         this.sendMessage = this.sendMessage.bind(this);
         this.handleData = this.handleData.bind(this);
         this.onOpen = this.onOpen.bind(this);
-        this.once = true;
     }
 
     sendMessage(message) {
@@ -95,49 +94,49 @@ class Home extends Component {
                         accessor: "volume"
                     }
                 ];
+
                 return (
                     <Page header="Trade Monitor Dashboard">
-                    <ReactTable
-                    className="Table-main"
-                    data={symbols}
-                    columns={columns}
-                    defaultPageSize={25}
-                    expanded={this.state.expanded}
-                    onExpandedChange={expanded => this.setState({ expanded })}
-                    PaginationComponent={Pagination}
-                    getTrProps={(state, rowInfo) => ({
-                        className:
-                        rowInfo && state.expanded[rowInfo.index] ? "Table-expanded" : ""
-                    })}
-                    getTdProps={(state, rowInfo, column, instance) => {
-                        return {
-                            onClick: (e, handleOriginal) => {
-                                const { index } = rowInfo;
-                                this.setState(prevState => ({
-                                    expanded: {
-                                        ...prevState.expanded,
-                                        [index]: !prevState.expanded[index]
-                                    }
-                                }));
-                            }
-                        };
-                    }}
-                    //   NoDataComponent={}
-                    SubComponent={original => (
-                        <SymbolDetails symbol={original.row.symbol} />
-                        )}
-                        />
-
-                        <Websocket
-                        url="ws://localhost:9000/trades"
-                        onOpen={this.onOpen}
-                        onMessage={this.handleData}
-                        reconnect={true}
-                        debug={true}
-                        ref={Websocket => {
-                            this.refWebSocket = Websocket;
+                        <ReactTable
+                        className="Table-main"
+                        data={symbols}
+                        columns={columns}
+                        defaultPageSize={25}
+                        expanded={this.state.expanded}
+                        onExpandedChange={expanded => this.setState({ expanded })}
+                        PaginationComponent={Pagination}
+                        getTrProps={(state, rowInfo) => ({
+                            className:
+                            rowInfo && state.expanded[rowInfo.viewIndex] ? "Table-expanded" : ""
+                        })}
+                        getTdProps={(state, rowInfo) => {
+                            return {
+                                onClick: (e, handleOriginal) => {
+                                    const { viewIndex } = rowInfo;
+                                    this.setState(prevState => ({
+                                        expanded: {
+                                            ...prevState.expanded,
+                                            [viewIndex]: !prevState.expanded[viewIndex]
+                                        }
+                                    }));
+                                }
+                            };
                         }}
-                        />
+                        SubComponent={original => (
+                            <SymbolDetails symbol={original.row.symbol} />
+                            )}
+                            />
+
+                            <Websocket
+                            url="ws://localhost:9000/trades"
+                            onOpen={this.onOpen}
+                            onMessage={this.handleData}
+                            reconnect={true}
+                            debug={true}
+                            ref={Websocket => {
+                                this.refWebSocket = Websocket;
+                            }}
+                            />
                         </Page>
                         );
                     }
