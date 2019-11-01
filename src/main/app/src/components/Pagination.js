@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from "react";
+import React, { Component } from "react";
 import "./Pagination.css";
 
 /*
@@ -95,10 +95,6 @@ class Pagination extends Component {
       page,
       canPrevious,
       canNext,
-      defaultPage,
-      defaultPageSize,
-      onPageChange,
-      onPageSizeChange,
       pageSize,
       pageSizeOptions,
       pages,
