@@ -101,13 +101,17 @@ public class WebServer {
 
         @Override
         public void entryAdded(EntryEvent<String, HazelcastJsonValue> event) {
-            HazelcastJsonValue json = event.getValue();
-            String symbol = new JSONObject(json.toString()).getString("symbol");
+            JSONObject tradeJson = new JSONObject(event.getValue().toString());
+            String symbol = tradeJson.getString("symbol");
             List<WsContext> contexts = symbolsToBeUpdated.get(symbol);
             if (contexts != null && !contexts.isEmpty()) {
                 System.out.println("Broadcasting update on = " + symbol);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("symbol", symbol);
+                jsonObject.append("data", tradeJson);
+                String message = jsonObject.toString();
                 for (WsContext context : contexts) {
-                    context.send(json.toString());
+                    context.send(message);
                 }
             }
         }
