@@ -128,7 +128,7 @@ class Home extends Component {
                             />
 
                             <Websocket
-                            url="ws://localhost:9000/trades"
+                            url="ws://3.80.159.255:9000/trades"
                             onOpen={this.onOpen}
                             onMessage={this.handleData}
                             reconnect={true}
