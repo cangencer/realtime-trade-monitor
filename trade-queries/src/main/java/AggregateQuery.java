@@ -12,6 +12,7 @@ import com.hazelcast.jet.kafka.KafkaSources;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
 import com.hazelcast.jet.pipeline.StreamStage;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -32,6 +33,8 @@ public class AggregateQuery {
             JobConfig query1config = new JobConfig()
                     .setProcessingGuarantee(ProcessingGuarantee.EXACTLY_ONCE)
                     .setName("AggregateQuery")
+                    .addClass(TradeJsonDeserializer.class)
+                    .addClass(Trade.class)
                     .addClass(AggregateQuery.class);
 
             jet.newJobIfAbsent(createPipeline(servers), query1config);
@@ -45,8 +48,8 @@ public class AggregateQuery {
         Pipeline p = Pipeline.create();
 
         StreamStage<Trade> source =
-                p.drawFrom(KafkaSources.<String, String, Trade>kafka(kafkaSourceProps(servers),
-                        record -> new Trade(record.value()), TOPIC))
+                p.drawFrom(KafkaSources.<String, Trade, Trade>kafka(kafkaSourceProps(servers),
+                        ConsumerRecord::value, TOPIC))
                  .withoutTimestamps();
 
 
@@ -75,7 +78,7 @@ public class AggregateQuery {
         props.setProperty("auto.offset.reset", "earliest");
         props.setProperty("bootstrap.servers", servers);
         props.setProperty("key.deserializer", StringDeserializer.class.getName());
-        props.setProperty("value.deserializer", StringDeserializer.class.getName());
+        props.setProperty("value.deserializer", TradeJsonDeserializer.class.getName());
         return props;
     }
 

@@ -1,3 +1,4 @@
+import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.jet.config.JobConfig;
@@ -5,7 +6,6 @@ import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.kafka.KafkaSources;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.Sinks;
-import com.hazelcast.jet.server.JetBootstrap;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.util.Map.Entry;
@@ -33,11 +33,8 @@ public class IngestTrades {
     private static Pipeline createPipeline(String servers) {
         Pipeline p = Pipeline.create();
 
-        p.drawFrom(KafkaSources.<String, String, Entry<String, Trade>>kafka(kafkaSourceProps(servers),
-                record -> {
-                    Trade trade = new Trade(record.value());
-                    return entry(trade.getTradeId(), trade);
-                }, TOPIC))
+        p.drawFrom(KafkaSources.<String, String, Entry<String, HazelcastJsonValue>>kafka(kafkaSourceProps(servers),
+                record -> entry(record.key(), new HazelcastJsonValue(record.value())), TOPIC))
          .withoutTimestamps()
          .setLocalParallelism(2)
          .drainTo(Sinks.map("trades"));

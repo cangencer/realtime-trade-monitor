@@ -1,9 +1,9 @@
 import com.hazelcast.core.EntryEvent;
+import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.jet.IMapJet;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.jet.datamodel.Tuple3;
-import com.hazelcast.jet.impl.util.Util;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.query.impl.predicates.EqualPredicate;
 import io.javalin.Javalin;
@@ -27,7 +27,7 @@ public class WebServer {
 
     public static void main(String[] args) {
         IMapJet<String, Tuple3<Long, Long, Integer>> results = jet.getMap("query1_Results");
-        IMapJet<String, Trade> trades = jet.getMap("trades");
+        IMapJet<String, HazelcastJsonValue> trades = jet.getMap("trades");
         IMapJet<String, String> symbols = jet.getMap("symbols");
 
         trades.addEntryListener(new TradeRecordsListener(), true);
@@ -84,10 +84,11 @@ public class WebServer {
                     });
 
                     JSONObject jsonObject = new JSONObject();
-                    Collection<Trade> records = trades.values(new EqualPredicate("symbol", symbol));
+                    Collection<HazelcastJsonValue> records = trades.values(new EqualPredicate("symbol", symbol));
                     records.forEach(trade -> {
+                        String tradeJson = trade.toString();
                         jsonObject.put("symbol", symbol);
-                        jsonObject.append("data", tradeToJson(trade));
+                        jsonObject.append("data", new JSONObject(tradeJson));
                     });
                     session.send(jsonObject.toString());
                 }
@@ -95,32 +96,21 @@ public class WebServer {
         });
     }
 
-    private static class TradeRecordsListener implements EntryAddedListener<String, Trade> {
+    private static class TradeRecordsListener implements EntryAddedListener<String, HazelcastJsonValue> {
+
 
         @Override
-        public void entryAdded(EntryEvent<String, Trade> event) {
-            String symbol = event.getValue().getSymbol();
+        public void entryAdded(EntryEvent<String, HazelcastJsonValue> event) {
+            HazelcastJsonValue json = event.getValue();
+            String symbol = new JSONObject(json.toString()).getString("symbol");
             List<WsContext> contexts = symbolsToBeUpdated.get(symbol);
             if (contexts != null && !contexts.isEmpty()) {
                 System.out.println("Broadcasting update on = " + symbol);
                 for (WsContext context : contexts) {
-                    Trade trade = event.getValue();
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("symbol", symbol);
-                    jsonObject.append("data", tradeToJson(trade));
-                    context.send(jsonObject.toString());
+                    context.send(json.toString());
                 }
             }
         }
-    }
-
-    private static JSONObject tradeToJson(Trade trade) {
-        return new JSONObject()
-                .put("id", trade.getTradeId())
-                .put("time", Util.toLocalTime(trade.getTime()))
-                .put("symbol", trade.getSymbol())
-                .put("quantity", String.format("%,d", trade.getQuantity()))
-                .put("price", priceToString(trade.getPrice()));
     }
 
     private static String priceToString(long price) {

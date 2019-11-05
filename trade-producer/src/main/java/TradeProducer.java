@@ -63,9 +63,21 @@ public class TradeProducer {
                 }
                 String symbol = symbols.get(rnd.nextInt(symbols.size()));
                 int price = symbolToPrice.compute(symbol, (t, v) -> v + rnd.nextInt(-1, 2));
-                String tradeLine = String.format("%s %d %s %d %d", UUID.randomUUID().toString(),
-                        System.currentTimeMillis(), symbol, rnd.nextInt(10, QUANTITY), price);
-                producer.send(new ProducerRecord<>(TOPIC, symbol, tradeLine));
+                String id = UUID.randomUUID().toString();
+                String tradeLine = String.format("{" +
+                                "\"id\": \"%s\"," +
+                                "\"timestamp\": %d," +
+                                "\"symbol\": \"%s\"," +
+                                "\"price\": %d," +
+                                "\"quantity\": %d" +
+                                "}",
+                        id,
+                        System.currentTimeMillis(),
+                        symbol,
+                        price,
+                        rnd.nextInt(10, QUANTITY)
+                );
+                producer.send(new ProducerRecord<>(TOPIC, id, tradeLine));
                 emitSchedule += interval;
             }
             Thread.sleep(1);

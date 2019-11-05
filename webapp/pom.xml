@@ -137,9 +137,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast.jet.examples.monitor</groupId>
-            <artifactId>common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.hazelcast.jet</groupId>
+            <artifactId>hazelcast-jet</artifactId>
+            <version>${jet.version}</version>
         </dependency>
         <dependency>
             <groupId>io.javalin</groupId>

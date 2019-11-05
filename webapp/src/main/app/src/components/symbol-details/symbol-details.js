@@ -50,7 +50,7 @@ class SymbolDetails extends Component {
             },
             {
                 Header: 'Time',
-                accessor: 'time'
+                accessor: 'timestamp'
             },
             {
                 Header: 'Symbol',
