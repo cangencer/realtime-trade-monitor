@@ -98,7 +98,6 @@ public class WebServer {
 
     private static class TradeRecordsListener implements EntryAddedListener<String, HazelcastJsonValue> {
 
-
         @Override
         public void entryAdded(EntryEvent<String, HazelcastJsonValue> event) {
             JSONObject tradeJson = new JSONObject(event.getValue().toString());

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Trade  {
+public class Trade implements Serializable {
 
     private String id;
     private long timestamp;

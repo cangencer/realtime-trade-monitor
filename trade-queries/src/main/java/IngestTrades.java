@@ -34,7 +34,8 @@ public class IngestTrades {
         Pipeline p = Pipeline.create();
 
         p.drawFrom(KafkaSources.<String, String, Entry<String, HazelcastJsonValue>>kafka(kafkaSourceProps(servers),
-                record -> entry(record.key(), new HazelcastJsonValue(record.value())), TOPIC))
+                record -> entry(record.key(), new HazelcastJsonValue(record.value())), TOPIC)
+        )
          .withoutTimestamps()
          .setLocalParallelism(2)
          .drainTo(Sinks.map("trades"));
