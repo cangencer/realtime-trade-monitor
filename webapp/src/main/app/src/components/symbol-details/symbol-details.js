@@ -50,15 +50,26 @@ class SymbolDetails extends Component {
             },
             {
                 Header: 'Time',
-                accessor: 'timestamp'
+                accessor: 'timestamp',
+                Cell: ({ value }) => (
+                    <span className="Table-highlightValue">{new Date(value).toLocaleString("en-US")}</span>
+                )
             },
             {
                 Header: 'Symbol',
-                accessor: 'symbol'
+                accessor: 'symbol',
+                Cell: ({ value }) => (
+                    <span className="Table-highlightValue">{value}</span>
+                )
+
             },
             {
                 Header: 'Quantity',
-                accessor: 'quantity'
+                accessor: 'quantity',
+                Cell: ({ value }) => (
+                    <span className="Table-highlightValue">{value.toLocaleString()}</span>
+                )
+
             },
             {
                 Header: 'Price',
@@ -82,6 +93,12 @@ class SymbolDetails extends Component {
         <ReactTable
         data={symbol}
         columns={columns}
+        defaultSorted={[
+            {
+                id: "timestamp",
+                desc: true
+            }
+        ]}
         defaultPageSize={10}
         noDataText={this.state.loading ? 'Loading data...' : 'No rows found'}
         expanded={this.state.expanded}
