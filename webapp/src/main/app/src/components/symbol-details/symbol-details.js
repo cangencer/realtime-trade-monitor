@@ -62,7 +62,13 @@ class SymbolDetails extends Component {
             },
             {
                 Header: 'Price',
-                accessor: 'price'
+                accessor: 'price',
+                Cell: ({ value }) => (
+                    <span className="Table-highlightValue Table-price">{(value / 100).toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD"
+                    })}</span>
+                )
             }
         ];
 
