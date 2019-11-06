@@ -64,7 +64,7 @@ public class WebServer {
                     Map<String, String> allSymbols = symbols.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue));
                     results.forEach((key, value) -> {
                         jsonObject.append("symbols", new JSONObject()
-                                    .put("name", allSymbols.get(key))
+                                .put("name", allSymbols.get(key))
                                 .put("symbol", key)
                                 .put("count", value.f0())
                                 .put("volume", priceToString(value.f1()))
