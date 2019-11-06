@@ -94,8 +94,8 @@ class Home extends Component {
                         accessor: "volume"
                     }
                 ];
-
-                return (
+        const WS_HOST = process.env.REACT_APP_WS_HOST;
+        return (
                     <Page header="Trade Monitor Dashboard">
                         <ReactTable
                         className="Table-main"
@@ -128,7 +128,7 @@ class Home extends Component {
                             />
 
                             <Websocket
-                            url="ws://3.80.159.255:9000/trades"
+                            url={WS_HOST}
                             onOpen={this.onOpen}
                             onMessage={this.handleData}
                             reconnect={true}

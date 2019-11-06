@@ -42,6 +42,7 @@ class SymbolDetails extends Component {
 
     render() {
         const {symbol} = this.state;
+        const WS_HOST = process.env.REACT_APP_WS_HOST;
 
         const columns = [
             {
@@ -84,7 +85,7 @@ class SymbolDetails extends Component {
         ];
 
         return <Fragment>
-        <Websocket url='ws://3.80.159.255:9000/trades' onOpen={this.onOpen}
+        <Websocket url={WS_HOST} onOpen={this.onOpen}
         onMessage={this.handleData}
         reconnect={true} debug={true}
         ref={Websocket => {

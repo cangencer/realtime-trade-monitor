@@ -42,6 +42,13 @@
   font-weight: 500;
 }
 
+.Pagination-button:focus {
+  outline: 0;
+}
+.Pagination-button:hover {
+  cursor: pointer;
+}
+
 .Pagination-buttonPrev {
   justify-content: flex-start;
 }

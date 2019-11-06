@@ -4,6 +4,7 @@ hazelcast-client:
   group:
     name: jet
   network:
+    smart-routing: false
     cluster-members:
 #      - 127.0.0.1:5701
       - 35.170.51.165:5701
