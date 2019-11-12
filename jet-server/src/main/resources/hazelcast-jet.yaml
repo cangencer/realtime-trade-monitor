@@ -8,7 +8,7 @@ hazelcast-jet:
     flow-control-period: 100
     backup-count: 1
     scale-up-delay-millis: 10000
-    lossless-restart-enabled: false
+#    lossless-restart-enabled: true
 
   edge-defaults:
     queue-size: 1024
