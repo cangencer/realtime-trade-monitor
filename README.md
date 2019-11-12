@@ -7,7 +7,7 @@ an aggregation on the trades, storing the results into a separate map.
 These two maps are utilized by a live dashboard which offers drill down
 functionality into viewing individual trades that make up the aggregation.
 
-## How to run:
+## How to run:
 
 1. Build the project
 
