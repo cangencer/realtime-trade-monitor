@@ -48,7 +48,7 @@ java -jar trade-queries/target/trade-queries-1.0-SNAPSHOT.jar load-symbols
 ```
 java -jar trade-queries/target/trade-queries-1.0-SNAPSHOT.jar ingest-trades <bootstrap servers>
 ```
-
+* Aggregate trades by symbol
 ```
 java -jar trade-queries/target/trade-queries-1.0-SNAPSHOT.jar aggregate-query <bootstrap servers>
 ```
